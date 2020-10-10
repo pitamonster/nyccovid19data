@@ -23,8 +23,8 @@ function createVegaMapForSelectedOption(selectedOption) {
 }
 
 
-let zctaShapesFileUrl = "data/MODZCTA_2010_WGS1984.topo.json";
-let zctaPointsFileUrl = "data/zcta_points.csv";
+let zctaShapesFileUrl = "https://raw.githubusercontent.com/pitamonster/nyccovid19data/main/data/zcta/MODZCTA_2010_WGS1984.topo.json";
+let zctaPointsFileUrl = "https://raw.githubusercontent.com/pitamonster/nyccovid19data/main/data/zcta/zcta_points.csv";
 
 function vegaSpecForSelectedOption(selectedOption) {
 
