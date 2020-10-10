@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+<meta http-equiv="content-type" content="text/html;charset=utf-8" />
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NYC Covid-19 Map</title>
+
+  <!-- Import vega dependencies that are compatible with IE11-->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/core-js/2.6.11/core.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-polyfill/7.8.7/polyfill.js"></script>
+  <script src="https://vega.github.io/vega/assets/promise.min.js"></script>
+  <script src="https://vega.github.io/vega/assets/symbol.min.js"></script>
+  <script src="https://vega.github.io/vega/assets/fetch.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/vega@5/build-es5/vega.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/vega-lite@4/build-es5/vega-lite.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/vega-embed@6/build-es5/vega-embed.js"></script>
+  
+  <style>
+    body {
+      margin: 0;
+      font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
+      font-size: 16px;
+      line-height: 20px;
+      color: #333;
+      background-color: #fff;
+    }
+    .map-container {
+      width: 100vmin;
+      margin: 0 auto;
+    }
+    .vis {
+      height: 100vmin;
+      width: 90vmin;
+    }
+    .background {
+      fill: transparent;
+      stroke: transparent !important;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="map-container">
+    <select>
+      <!-- <option value="">Select One …</option> -->
+      <option value="COVID_CASE_RATE_4WEEK">Last 28 Days Case Rate</option>
+      <option value="COVID_CASE_COUNT_4WEEK">Last 28 Days Case Count</option>
+      <option value="COVID_DEATH_RATE_4WEEK">Last 28 Days Death Rate</option>
+      <option value="COVID_DEATH_COUNT_4WEEK">Last 28 Days Death Count</option>
+      <option value="TESTING_RATE_4WEEK">Last 28 Days Test Rate</option>
+      <option value="NUM_PEOP_TEST_4WEEK">Last 28 Days Test Count</option>      
+      <option value="PERCENT_POSITIVE_4WEEK">Last 28 Days Positive Test Rate</option>
+      <!-- <option value="CumulativeCaseRate">Cumulative Case Rate</option>
+      <option value="CumulativeCaseCount">Cumulative Case Count</option>
+      <option value="CumulativeDeathRate">Cumulative Death Rate</option>
+      <option value="CumulativeDeathCount">Cumulative Death Count</option> -->
+    </select>
+
+    <div class="vis" id="map"></div>
+  </div>
+
+
+  <script src="index.js"></script>
+
+</body>
+
+</html>
