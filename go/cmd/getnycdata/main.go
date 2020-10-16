@@ -2,41 +2,38 @@ package main
 
 
 import (
-	"bytes"
+  "bytes"
   // "encoding/base64"
-	"encoding/json"
-	"fmt"
-	"net/http"
+  "encoding/json"
+  "fmt"
+  "net/http"
   "net/url"
   "io"
-	"io/ioutil"
+  "io/ioutil"
   "os"
   "time"
 
   "github.com/pitamonster/nyccovid19data/go/env"
-	"github.com/rs/xid"
 )
 
 
 func main() {
 
-	var err error
+  var err error
 
   err = env.Load()
   if err != nil {
-    fmt.Errorf("Bad environment -- %s", err.Error())
     fmt.Printf("Bad environment -- %s", err.Error())
-    // return
+    return
   }
 
 
   // GET all versions/commits of data-by-modzcta.csv at https://github.com/nychealth/coronavirus-data
   var commits []map[string]interface{}
 
-	// GET https://api.github.com/repos/:owner/:repo/commits?path=FILE_PATH
-	dataByModzctaPath := "data-by-modzcta.csv"
-  now := time.Now()
-  since := time.Date(2020, 2, 28, 0, 0, 0, 0, time.UTC) // YYYY-MM-DDTHH:MM:SSZ
+  // GET https://api.github.com/repos/:owner/:repo/commits?path=FILE_PATH
+  dataByModzctaPath := "data-by-modzcta.csv"
+  since := time.Date(2020, 5, 18, 0, 0, 0, 0, time.UTC) // YYYY-MM-DDTHH:MM:SSZ
   until := since.Add(time.Hour * 24 * 14)
 
   params := url.Values{}
@@ -60,14 +57,14 @@ func main() {
 
     _, respBytes, err := sendRequest("GET", u.String(), []byte{}, map[string]string{})
     if err != nil {
-      fmt.Errorf(err.Error())
+      fmt.Print(err.Error())
     }
     // log.Println(string(respBytes))
 
     var someCommits []map[string]interface{}
     err = json.Unmarshal(respBytes, &someCommits)
     if err != nil {
-      fmt.Errorf(err.Error())
+      fmt.Print(err.Error())
     }
     commits = append(commits, someCommits...)
 
@@ -75,7 +72,7 @@ func main() {
     since = until
     until = until.Add( time.Hour * 24 * 14 )
 
-    if until.After(now) {
+    if len(someCommits) == 0 {
       break
     }
   }
@@ -117,25 +114,27 @@ func main() {
   for _, commit := range commits {
 
     sha, _ := commit["sha"].(string)
-    // commitMeta := commit["commit"].(map[string]interface{})
-    // commitDate := commitMeta["author"].(map[string]interface{})["date"].(string)
+    commitMeta := commit["commit"].(map[string]interface{})
+    commitDate := commitMeta["author"].(map[string]interface{})["date"].(string)
     // commitMsg := commitMeta["message"].(string)
     fmt.Printf("%s\n", sha)
 
-  	// Download 
-  	// GET https://api.github.com/repos/:owner/:repo/contents/:FILE_PATH?ref=SHA
-  	// GET https://raw.githubusercontent.com/:owner/:repo/:sha/:FILE_PATH
-  	// fileUrl := fmt.Sprintf("https://raw.githubusercontent.com/nychealth/coronavirus-data/%s/%s", sha, filepath)
-  	// localFilepath := getFile(fileUrl, ".csv")
-   //  defer os.Remove(localFilepath)
-   //  fmt.Printf("%s\n", localFilepath)
+    // Download 
+    // GET https://api.github.com/repos/:owner/:repo/contents/:FILE_PATH?ref=SHA
+    // GET https://raw.githubusercontent.com/:owner/:repo/:sha/:FILE_PATH
+    fileUrl := fmt.Sprintf("https://raw.githubusercontent.com/nychealth/coronavirus-data/%s/%s", sha, dataByModzctaPath)
+    localFilepath := fmt.Sprintf("%s/data/nychealth-coronavirus-data/data-by-modzcta/%s-data-by-modzcta.csv", env.RootFolderLocalPath, commitDate)
+    err = getFile(fileUrl, localFilepath)
+    if err != nil {
+      fmt.Print(err.Error())
+    }
     
 
-  	// // Upload
-  	// // http PUT https://api.github.com/repos/lee-dohm/test-repo/contents/hello.txt \
-	  // // message="my commit message" \
-	  // // committer:="{ \"name\": \"Lee Dohm\", \"email\": \"1038121+lee-dohm@users.noreply.github.com\" }" \
-	  // // content="bXkgbmV3IGZpbGUgY29udGVudHM="
+    // // Upload
+    // // http PUT https://api.github.com/repos/lee-dohm/test-repo/contents/hello.txt \
+    // // message="my commit message" \
+    // // committer:="{ \"name\": \"Lee Dohm\", \"email\": \"1038121+lee-dohm@users.noreply.github.com\" }" \
+    // // content="bXkgbmV3IGZpbGUgY29udGVudHM="
    //  destFilepath := fmt.Sprintf("data/nychealth-coronavirus-data/data-by-modzcta/%s-data-by-modzcta.csv", commitDate)
    //  apiUrl = fmt.Sprintf("https://%s:%s@api.github.com/repos/pitamonster/nyccovid19data/contents/%s", username, password, destFilepath)
    //  // headers := map[string]string{
@@ -157,15 +156,12 @@ func main() {
    //    fmt.Errorf(err.Error())
    //  }
 
-  	
-  	// _, respJsonBytes, err = sendRequest("PUT", apiUrl, bodyBytes, map[string]string{})
-	  // if err != nil {
-	  // 	fmt.Errorf(err.Error())
-	  // }
+    
+    // _, respJsonBytes, err = sendRequest("PUT", apiUrl, bodyBytes, map[string]string{})
+    // if err != nil {
+    //  fmt.Errorf(err.Error())
+    // }
    //  fmt.Printf("%s\n", string(respJsonBytes))
-
-
-    break
   }
 
 }
@@ -205,40 +201,35 @@ func sendRequest(method string, url string, body []byte, headers map[string]stri
 }
 
 
-func getFile(url string, fileExtension string) string {
-
-	var localFilepath string
+func getFile(url string, localFilepath string) error {
 
   client := http.Client{}
   req, err := http.NewRequest("GET", url, nil)
 
   resp, err := client.Do(req)
   if err != nil {
-    return ""
+    return fmt.Errorf("GET file failed -- %s", err.Error())
   }
   defer resp.Body.Close()
 
 
   if resp.StatusCode == http.StatusOK {
 
-    tmpFilename := fmt.Sprintf("%s%s", xid.New().String(), fileExtension)
-    localFilepath = tmpFilepathForFilename( tmpFilename )
-
     out, err := os.Create(localFilepath)
     if err != nil {
-      return ""
+      return fmt.Errorf("Create file failed -- %s", err.Error())
     }
     defer out.Close()
 
     _, err = io.Copy(out, resp.Body)
     if err != nil {
-      return ""
+      return fmt.Errorf("Write GET file response to file failed -- %s", err.Error())
     }
 
   }
   
 
-  return localFilepath
+  return nil
 }
 
 

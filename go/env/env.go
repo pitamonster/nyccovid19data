@@ -10,6 +10,7 @@ import (
 
 var GithubUsername            string
 var GithubPassword            string
+var RootFolderLocalPath       string
 
 
 func Load() error {
@@ -24,6 +25,11 @@ func Load() error {
   GithubPassword = os.Getenv("GITHUB_PERSONAL_ACCESS_TOKEN")
   if GithubPassword == "" {
     return fmt.Errorf("GITHUB_PERSONAL_ACCESS_TOKEN env var is not set")
+  }
+
+  RootFolderLocalPath = os.Getenv("ROOT_FOLDER_LOCAL_PATH")
+  if RootFolderLocalPath == "" {
+    return fmt.Errorf("ROOT_FOLDER_LOCAL_PATH env var is not set")
   }
 
   printVars()
@@ -48,4 +54,5 @@ func printVars() {
 
   fmt.Printf("GITHUB_USERNAME: %v\n", GithubUsername)
   fmt.Printf("GITHUB_PERSONAL_ACCESS_TOKEN: %v\n", GithubPassword)
+  fmt.Printf("ROOT_FOLDER_LOCAL_PATH: %v\n", RootFolderLocalPath)
 }
