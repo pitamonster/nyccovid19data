@@ -7,9 +7,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+  "net/url"
   "io"
 	"io/ioutil"
   "os"
+  "time"
 
   "github.com/pitamonster/nyccovid19data/go/env"
 	"github.com/rs/xid"
@@ -28,23 +30,88 @@ func main() {
   }
 
 
+  // GET all versions/commits of data-by-modzcta.csv at https://github.com/nychealth/coronavirus-data
+  var commits []map[string]interface{}
+
 	// GET https://api.github.com/repos/:owner/:repo/commits?path=FILE_PATH
-	filepath := "data-by-modzcta.csv"
-  since := "2020-02-28T00:00:00Z" // YYYY-MM-DDTHH:MM:SSZ
-	apiUrl := fmt.Sprintf("https://api.github.com/repos/nychealth/coronavirus-data/commits?path=%s&since=%s", filepath, since)
-  _, respJsonBytes, err := sendRequest("GET", apiUrl, []byte{}, map[string]string{})
-  if err != nil {
-  	fmt.Errorf(err.Error())
+	dataByModzctaPath := "data-by-modzcta.csv"
+  now := time.Now()
+  since := time.Date(2020, 2, 28, 0, 0, 0, 0, time.UTC) // YYYY-MM-DDTHH:MM:SSZ
+  until := since.Add(time.Hour * 24 * 14)
+
+  params := url.Values{}
+  params.Add("path", dataByModzctaPath)
+  params.Add("since", since.Format(time.RFC3339))
+  params.Add("until", until.Format(time.RFC3339))
+
+  u := &url.URL{
+    Scheme:   "https",
+    Host:     "api.github.com",
+    Path:     "repos/nychealth/coronavirus-data/commits",
+    User:     url.UserPassword(env.GithubUsername, env.GithubPassword),
   }
-  // fmt.Print(string(respJsonBytes))
+
+
+  for {
+
+    params.Set("since", since.Format(time.RFC3339))
+    params.Set("until", until.Format(time.RFC3339))
+    u.RawQuery = params.Encode()
+
+    _, respBytes, err := sendRequest("GET", u.String(), []byte{}, map[string]string{})
+    if err != nil {
+      fmt.Errorf(err.Error())
+    }
+    // log.Println(string(respBytes))
+
+    var someCommits []map[string]interface{}
+    err = json.Unmarshal(respBytes, &someCommits)
+    if err != nil {
+      fmt.Errorf(err.Error())
+    }
+    commits = append(commits, someCommits...)
+
+
+    since = until
+    until = until.Add( time.Hour * 24 * 14 )
+
+    if until.After(now) {
+      break
+    }
+  }
+
+  fmt.Printf("Found %d commits\n", len(commits))
+
+
+
+
+  // // GET files already uploaded to api.github.com/repos/pitamonster/nyccovid19data
+  // // GET /repos/:owner/:repo/contents/:path
+  // // api.github.com/repos/[USER]/[REPO]/git/trees/[BRANCH]?recursive=1
+  // u.Path = "repos/pitamonster/nyccovid19data/contents/data/nychealth-coronavirus-data/data-by-modzcta" // Contents API
+  // // u.Path = "repos/pitamonster/nyccovid19data/git/trees/main"  // Trees API
+  // u.RawQuery = ""
+
+  // _, respBytes, err := sendRequest("GET", u.String(), []byte{}, map[string]string{})
+  // if err != nil {
+  //   fmt.Errorf(err.Error())
+  // }
+  // // log.Println(string(respBytes))
+
+  // var files []map[string]interface{}
+  // err = json.Unmarshal(respBytes, &files)
+  // if err != nil {
+  //   fmt.Errorf(err.Error())
+  // }
+  // fmt.Printf("Found %d files\n", len(files))
+
+  // var filenames []string
+  // for _, fileObj := range files {
+  //   filename, _ := fileObj["name"].(string)
+  //   filenames = append(filenames, filename)
+  // }
   
 
-  var commits []map[string]interface{}
-  err = json.Unmarshal(respJsonBytes, &commits)
-  if err != nil {
-    fmt.Errorf(err.Error())
-  }
-  fmt.Printf("Found %d commits",  len(commits))
 
 
   for _, commit := range commits {
