@@ -20,6 +20,29 @@ function populateDateSelect() {
         }
 
         handleInputChange();
+        
+
+        dataFilenamesJsonUrl = "https://raw.githubusercontent.com/pitamonster/nyccovid19data/main/data/data-by-modzcta-28day-filepaths.json";
+        getJSON( dataFilenamesJsonUrl,
+          function(err, data) {
+            if (err !== null) {
+              console.log(err);
+            } else {
+              // console.log(data);
+              let filenames = data;
+              for (let i = 0; i < filenames.length; i++) {
+                let filename = filenames[i];
+
+                let selectOption = document.createElement("option");
+                selectOption.textContent = dateRageLabelForFilename(filename);
+                selectOption.value = filename;          
+                dateSelect.appendChild(selectOption);
+              }
+
+              handleInputChange();
+            }
+          }
+        );
       }
     }
   );

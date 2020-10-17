@@ -1,5 +1,4 @@
 .DS_Store
-go/bin
 .env
-go/cmd/getnycdata/.env
-go/cmd/getnycdata/getnycdata
+go/
+writecsvs.rb
