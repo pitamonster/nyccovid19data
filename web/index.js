@@ -1,17 +1,30 @@
-function addInputEventListener() {
-  let select = document.querySelector('select');
-  select.addEventListener('change', function (e) {
+function populateDateSelect() {
+  let dateSelect = document.querySelector('#date-select');
+  // Populate with filenames from data/data-by-modzcta-7day
+
+}
+
+function addInputEventListeners() {
+  let dateSelect = document.querySelector('#date-select');
+  dateSelect.addEventListener('change', function (e) {
+    handleInputChange(e);
+  });
+
+  let dataSelect = document.querySelector('#data-select');
+  dataSelect.addEventListener('change', function (e) {
     handleInputChange(e);
   });
 }
 
 function handleInputChange(e) {
-  console.log(e.target.value);
-  createVegaMapForSelectedOption(e.target.value);
+  let dateSelect = document.querySelector('#date-select');
+  let dataSelect = document.querySelector('#data-select');
+
+  createVegaMapForSelectedOptions(dateSelect.value, dataSelect.value);
 }
 
-function createVegaMapForSelectedOption(selectedOption) {
-  let vegaSpec = vegaSpecForSelectedOption(selectedOption);
+function createVegaMapForSelectedOptions(selectedDate, selectedData) {
+  let vegaSpec = vegaSpecForSelectedOption(selectedDate, selectedData);
   let vegaOptions = {
     "renderer": "svg"
   };
@@ -26,58 +39,65 @@ function createVegaMapForSelectedOption(selectedOption) {
 let zctaShapesFileUrl = "https://raw.githubusercontent.com/pitamonster/nyccovid19data/main/data/zcta/MODZCTA_2010_WGS1984.topo.json";
 let zctaPointsFileUrl = "https://raw.githubusercontent.com/pitamonster/nyccovid19data/main/data/zcta/zcta_points.csv";
 
-function vegaSpecForSelectedOption(selectedOption) {
+function vegaSpecForSelectedOption(selectedDate, selectedData) {
+
+
 
   let params = {};
-  params["field"] = selectedOption;
-  params["dataUrl"] = dataUrlForSelectedOption(selectedOption);
+  params["field"] = selectedData;
+  params["dataUrl"] = dataUrlForSelectedOption(selectedDate, selectedData);
 
 
   switch (selectedOption) {
-  case 'COVID_CASE_RATE_4WEEK':
-    params["legendTitle"] = "Cases Per 100k | Last 28 Days";
+  case 'COVID_CASE_RATE':
+    params["legendTitle"] = "Cases Per 100k | Last 7 Days";
     params["fieldUnits"] = "Cases per 100,000";
     params["colorSchemeName"] = "lightgreyred";
     break;
-  case 'COVID_CASE_COUNT_4WEEK':
+  case 'COVID_CASE_COUNT':
     params["legendTitle"] = "Cases | Last 28 Days";
     params["fieldUnits"] = "Cases";
     params["colorFill"] = "red";
     params["legendValues"] = [10, 50, 150];
     params["range"] = [0, 600];
     break;
-  case 'COVID_DEATH_RATE_4WEEK':
-    params["legendTitle"] = "Deaths Per 100k | Last 28 Days";
+  case 'COVID_DEATH_RATE':
+    params["legendTitle"] = "Deaths Per 100k | Last 7 Days";
     params["fieldUnits"] = "Deaths per 100,000";
     params["colorSchemeName"] = "lightgreyred";
     break;
-  case 'COVID_DEATH_COUNT_4WEEK':
-    params["legendTitle"] = "Deaths | Last 28 Days";
+  case 'COVID_DEATH_COUNT':
+    params["legendTitle"] = "Deaths | Last 7 Days";
     params["fieldUnits"] = "Deaths";
     params["colorFill"] = "red";
     params["legendValues"] = [1, 5, 10];
     params["range"] = [0, 250];
     break;
-  case 'TESTING_RATE_4WEEK':
-    params["legendTitle"] = "Tests | Last 28 Days";
+  case 'TEST_RATE':
+    params["legendTitle"] = "Tests | Last 7 Days";
     params["fieldUnits"] = "Tests";
     params["colorSchemeName"] = "lightgreyteal";
-  case 'NUM_PEOP_TEST_4WEEK':
-    params["legendTitle"] = "Tests Per 100k | Last 28 Days";
+  case 'TOTAL_COVID_TESTS':
+    params["legendTitle"] = "Tests Per 100k | Last 7 Days";
     params["fieldUnits"] = "Tests per 100,000";
     params["colorFill"] = "teal";
     params["legendValues"] = [10, 50, 150];
     params["range"] = [0, 600];
     break;  
-  case "PERCENT_POSITIVE_4WEEK":
-    params["legendTitle"] = "Percent Positive | Last 28 Days";
+  case "PERCENT_POSITIVE":
+    params["legendTitle"] = "Percent Positive | Last 7 Days";
     params["fieldUnits"] = "Percent Positive";
     params["colorSchemeName"] = "lightgreyred";
     break;
+  case 'POSITIVE_COUNT':
+    params["legendTitle"] = "Positive Tests Per 100k | Last 7 Days";
+    params["fieldUnits"] = "Positive Tests per 100,000";
+    params["colorFill"] = "red";
+    params["legendValues"] = [10, 50, 150];
+    params["range"] = [0, 600];
+    break;
   default:
-    params["field"] = "COVID_CASE_RATE_4WEEK";
-    params["dataUrl"] = dataUrlForSelectedOption("COVID_CASE_RATE_4WEEK");
-    params["legendTitle"] = "Cases Per 100k | Last 28 Days";
+    params["legendTitle"] = "Cases Per 100k | Last 7 Days";
     params["fieldUnits"] = "Cases per 100,000";
     params["colorSchemeName"] = "lightgreyred";
   }
@@ -86,15 +106,15 @@ function vegaSpecForSelectedOption(selectedOption) {
   return vegaSpecForParams(params);
 }
 
-function dataUrlForSelectedOption(selectedOption) {
+
+function dataUrlForSelectedOption(selectedDate, selectedData) {
   var dataUrl;
 
-  if ( selectedOption.includes("4WEEK") ) {
-    dataUrl = "https://raw.githubusercontent.com/nychealth/coronavirus-data/master/recent/recent-4-week-by-modzcta.csv";
-  }
+  dataUrl = "https://raw.githubusercontent.com/nychealth/coronavirus-data/master/recent/recent-4-week-by-modzcta.csv";
 
   return dataUrl;
 }
+
 
 function vegaSpecForParams(params) {
 
@@ -288,8 +308,14 @@ function vegaSpecForParams(params) {
 
 
 function initPage() {
-  let select = document.querySelector('select');
-  createVegaMapForSelectedOption(select.value || 'COVID_CASE_RATE_4WEEK');
+  let dateSelect = document.querySelector('#date-select');
+
+  let dataSelect = document.querySelector('#data-select');
+
+
+
+
+  createVegaMapForSelectedOption(dateSelect.value, dataSelect.value);
 
   addInputEventListener();
 }
