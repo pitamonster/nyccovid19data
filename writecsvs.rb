@@ -38,9 +38,12 @@ dates.each_with_index do |date, i|
 	rows_initial = CSV.read(filepath0)
 	rows_final = CSV.read(filepath1)
 
-	destFilepath = "data/data-by-modzcta-#{period}day/#{date.utc.iso8601.split("T").first}-data-by-modzcta-#{period}day.csv"
+	dateInitialStr = date0.utc.iso8601.split("T").first
+	dateFinalStr = date.utc.iso8601.split("T").first
+
+	destFilepath = "data/data-by-modzcta-#{period}day/#{dateInitialStr}-#{dateFinalStr}-data-by-modzcta.csv"
 	destFilepaths = destFilepaths.push(destFilepath)
-	
+
 	csv = CSV.open(destFilepath, "wb")
 	csv << rows_initial[0] + ["TEST_RATE", "POSITIVE_COUNT"]
 	# Column headers
@@ -158,6 +161,6 @@ end
 
 
 File.open("data/data-by-modzcta-#{period}day-filepaths.json", "wb") do |f|
-  f << JSON.pretty_generate(destFilepaths)
+  f << JSON.pretty_generate(destFilepaths.reverse)
 end
 

@@ -1,8 +1,45 @@
 function populateDateSelect() {
   let dateSelect = document.querySelector('#date-select');
-  // Populate with filenames from data/data-by-modzcta-7day
 
+  // Populate with filenames from data/data-by-modzcta-7day
+  let dataFilenamesJsonUrl = "https://raw.githubusercontent.com/pitamonster/nyccovid19data/main/data/data-by-modzcta-7day-filepaths.json";
+  getJSON( dataFilenamesJsonUrl,
+    function(err, data) {
+      if (err !== null) {
+        console.log(err);
+      } else {
+        // console.log(data);
+        let filenames = data;
+        for (let i = 0; i < filenames.length; i++) {
+          let filename = filenames[i];
+          let dateStr = filename.split("/")[2].slice(0, -25);
+
+          let selectOption = document.createElement("option");
+          selectOption.textContent = dateStr;
+          selectOption.value = filename;          
+          dateSelect.appendChild(selectOption);
+        }
+
+        handleInputChange();
+      }
+    }
+  );
 }
+
+function getJSON(url, callback) {
+  let xhr = new XMLHttpRequest();
+  xhr.open('GET', url, true);
+  xhr.responseType = 'json';
+  xhr.onload = function() {
+    var status = xhr.status;
+    if (status === 200) {
+      callback(null, xhr.response);
+    } else {
+      callback(status, xhr.response);
+    }
+  };
+  xhr.send();
+};
 
 function addInputEventListeners() {
   let dateSelect = document.querySelector('#date-select');
@@ -20,11 +57,13 @@ function handleInputChange(e) {
   let dateSelect = document.querySelector('#date-select');
   let dataSelect = document.querySelector('#data-select');
 
-  createVegaMapForSelectedOptions(dateSelect.value, dataSelect.value);
+  createVegaMap(dateSelect.value, dataSelect.value);
 }
 
-function createVegaMapForSelectedOptions(selectedDate, selectedData) {
-  let vegaSpec = vegaSpecForSelectedOption(selectedDate, selectedData);
+function createVegaMap(selectedDate, selectedData) {
+  console.log("createVegaMap", selectedDate, selectedData);
+
+  let vegaSpec = buildVegaSpec(selectedDate, selectedData);
   let vegaOptions = {
     "renderer": "svg"
   };
@@ -39,16 +78,16 @@ function createVegaMapForSelectedOptions(selectedDate, selectedData) {
 let zctaShapesFileUrl = "https://raw.githubusercontent.com/pitamonster/nyccovid19data/main/data/zcta/MODZCTA_2010_WGS1984.topo.json";
 let zctaPointsFileUrl = "https://raw.githubusercontent.com/pitamonster/nyccovid19data/main/data/zcta/zcta_points.csv";
 
-function vegaSpecForSelectedOption(selectedDate, selectedData) {
-
+function buildVegaSpec(selectedDate, selectedData) {
 
 
   let params = {};
   params["field"] = selectedData;
   params["dataUrl"] = dataUrlForSelectedOption(selectedDate, selectedData);
+  console.log(params);
 
 
-  switch (selectedOption) {
+  switch (selectedData) {
   case 'COVID_CASE_RATE':
     params["legendTitle"] = "Cases Per 100k | Last 7 Days";
     params["fieldUnits"] = "Cases per 100,000";
@@ -110,7 +149,7 @@ function vegaSpecForSelectedOption(selectedDate, selectedData) {
 function dataUrlForSelectedOption(selectedDate, selectedData) {
   var dataUrl;
 
-  dataUrl = "https://raw.githubusercontent.com/nychealth/coronavirus-data/master/recent/recent-4-week-by-modzcta.csv";
+  dataUrl = `https://raw.githubusercontent.com/pitamonster/nyccovid19data/main/${ selectedDate }`;
 
   return dataUrl;
 }
@@ -120,7 +159,7 @@ function vegaSpecForParams(params) {
 
   var spec;
 
-  if ( ["COVID_CASE_RATE_4WEEK", "COVID_DEATH_RATE_4WEEK", "TESTING_RATE_4WEEK", "PERCENT_POSITIVE_4WEEK"].includes(params["field"]) ) {
+  if ( ["COVID_CASE_RATE", "COVID_DEATH_RATE", "TEST_RATE", "PERCENT_POSITIVE"].includes(params["field"]) ) {
 
     spec = {
       "$schema": "https://vega.github.io/schema/vega-lite/v4.json",
@@ -206,7 +245,7 @@ function vegaSpecForParams(params) {
         }
       }]
     };
-  } else if ( ["COVID_CASE_COUNT_4WEEK", "COVID_DEATH_COUNT_4WEEK", "NUM_PEOP_TEST_4WEEK"].includes(params["field"]) ) {
+  } else if ( ["COVID_CASE_COUNT", "COVID_DEATH_COUNT", "TOTAL_COVID_TESTS", "POSITIVE_COUNT"].includes(params["field"]) ) {
 
     spec = {
       "$schema": "https://vega.github.io/schema/vega-lite/v4.json",
@@ -308,16 +347,8 @@ function vegaSpecForParams(params) {
 
 
 function initPage() {
-  let dateSelect = document.querySelector('#date-select');
-
-  let dataSelect = document.querySelector('#data-select');
-
-
-
-
-  createVegaMapForSelectedOption(dateSelect.value, dataSelect.value);
-
-  addInputEventListener();
+  populateDateSelect();
+  addInputEventListeners();
 }
 
 
