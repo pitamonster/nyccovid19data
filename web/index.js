@@ -12,10 +12,9 @@ function populateDateSelect() {
         let filenames = data;
         for (let i = 0; i < filenames.length; i++) {
           let filename = filenames[i];
-          let dateStr = filename.split("/")[2].slice(0, -25);
 
           let selectOption = document.createElement("option");
-          selectOption.textContent = dateStr;
+          selectOption.textContent = dateRageLabelForFilename(filename);
           selectOption.value = filename;          
           dateSelect.appendChild(selectOption);
         }
@@ -24,6 +23,42 @@ function populateDateSelect() {
       }
     }
   );
+}
+
+function dateRageLabelForFilename(filename) {
+  let dateStr = filename.split("/")[2].slice(0, -20);
+  let dateRangeParts = dateStr.split("-");
+  let label = `${ monthShortForNum(dateRangeParts[1]) } ${dateRangeParts[2]} - ${ monthShortForNum(dateRangeParts[4]) } ${dateRangeParts[5]} ${dateRangeParts[0]}`;
+  return label;
+}
+
+function monthShortForNum(monthNumStr) {
+  switch (monthNumStr) {
+    case "01":
+      return "Jan";
+    case "02":
+      return "Feb";
+    case "03":
+      return "Mar";
+    case "04":
+      return "Apr";
+    case "05":
+      return "May";
+    case "06":
+      return "Jun";
+    case "07":
+      return "Jul";
+    case "08":
+      return "Aug";
+    case "09":
+      return "Sep";
+    case "10":
+      return "Oct";
+    case "11":
+      return "Nov";
+    case "12":
+      return "Dec";
+  }
 }
 
 function getJSON(url, callback) {
@@ -61,7 +96,7 @@ function handleInputChange(e) {
 }
 
 function createVegaMap(selectedDate, selectedData) {
-  console.log("createVegaMap", selectedDate, selectedData);
+  // console.log("createVegaMap", selectedDate, selectedData);
 
   let vegaSpec = buildVegaSpec(selectedDate, selectedData);
   let vegaOptions = {
@@ -84,59 +119,60 @@ function buildVegaSpec(selectedDate, selectedData) {
   let params = {};
   params["field"] = selectedData;
   params["dataUrl"] = dataUrlForSelectedOption(selectedDate, selectedData);
-  console.log(params);
+  // console.log(params);
+  // let dateRangeStr = dateRageLabelForFilename(selectedDate);
 
 
   switch (selectedData) {
   case 'COVID_CASE_RATE':
-    params["legendTitle"] = "Cases Per 100k | Last 7 Days";
+    params["legendTitle"] = `Cases Per 100k`;
     params["fieldUnits"] = "Cases per 100,000";
     params["colorSchemeName"] = "lightgreyred";
     break;
   case 'COVID_CASE_COUNT':
-    params["legendTitle"] = "Cases | Last 28 Days";
+    params["legendTitle"] = `Cases | ${dateRangeStr}`;
     params["fieldUnits"] = "Cases";
     params["colorFill"] = "red";
     params["legendValues"] = [10, 50, 150];
     params["range"] = [0, 600];
     break;
   case 'COVID_DEATH_RATE':
-    params["legendTitle"] = "Deaths Per 100k | Last 7 Days";
+    params["legendTitle"] = `Deaths Per 100k`;
     params["fieldUnits"] = "Deaths per 100,000";
     params["colorSchemeName"] = "lightgreyred";
     break;
   case 'COVID_DEATH_COUNT':
-    params["legendTitle"] = "Deaths | Last 7 Days";
+    params["legendTitle"] = `Deaths`;
     params["fieldUnits"] = "Deaths";
     params["colorFill"] = "red";
     params["legendValues"] = [1, 5, 10];
     params["range"] = [0, 250];
     break;
   case 'TEST_RATE':
-    params["legendTitle"] = "Tests | Last 7 Days";
+    params["legendTitle"] = `Tests`;
     params["fieldUnits"] = "Tests";
     params["colorSchemeName"] = "lightgreyteal";
   case 'TOTAL_COVID_TESTS':
-    params["legendTitle"] = "Tests Per 100k | Last 7 Days";
+    params["legendTitle"] = `Tests Per 100k`;
     params["fieldUnits"] = "Tests per 100,000";
     params["colorFill"] = "teal";
     params["legendValues"] = [10, 50, 150];
     params["range"] = [0, 600];
     break;  
   case "PERCENT_POSITIVE":
-    params["legendTitle"] = "Percent Positive | Last 7 Days";
+    params["legendTitle"] = `Percent Positive`;
     params["fieldUnits"] = "Percent Positive";
     params["colorSchemeName"] = "lightgreyred";
     break;
   case 'POSITIVE_COUNT':
-    params["legendTitle"] = "Positive Tests Per 100k | Last 7 Days";
+    params["legendTitle"] = `Positive Tests Per 100k`;
     params["fieldUnits"] = "Positive Tests per 100,000";
     params["colorFill"] = "red";
     params["legendValues"] = [10, 50, 150];
     params["range"] = [0, 600];
     break;
   default:
-    params["legendTitle"] = "Cases Per 100k | Last 7 Days";
+    params["legendTitle"] = `Cases Per 100k`;
     params["fieldUnits"] = "Cases per 100,000";
     params["colorSchemeName"] = "lightgreyred";
   }
